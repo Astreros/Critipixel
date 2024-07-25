@@ -74,10 +74,10 @@ final class VideoGameFixtures extends Fixture implements DependentFixtureInterfa
                 $videoGame->getReviews()->add($review);
 
                 $manager->persist($review);
-
-                $this->calculateAverageRating->calculateAverage($videoGame);
-                $this->countRatingsPerValue->countRatingsPerValue($videoGame);
             }
+
+            $this->calculateAverageRating->calculateAverage($videoGame);
+            $this->countRatingsPerValue->countRatingsPerValue($videoGame);
         });
 
         $manager->flush();
