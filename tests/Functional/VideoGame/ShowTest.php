@@ -19,40 +19,19 @@ final class ShowTest extends FunctionalTestCase
     public function testShouldPostReview(): void
     {
         $this->login();
-        $crawler = $this->client->request('GET', '/jeu-video-49');
-
-        $form = $crawler->selectButton('Poster')->form();
-
-        $form['review[rating]'] = 4;
-        $form['review[comment]'] = 'Un commentaire';
-
-        $this->client->submit($form);
-
+        $this->get('/jeu-video-49');
+        self::assertResponseIsSuccessful();
+        $this->submit(
+            'Poster',
+            [
+                'review[rating]' => 4,
+                'review[comment]' => 'Mon commentaire',
+            ]
+        );
         self::assertResponseStatusCodeSame(Response::HTTP_FOUND);
-
         $this->client->followRedirect();
-
         self::assertSelectorTextContains('div.list-group-item:last-child h3', 'user+0');
-        self::assertSelectorTextContains('div.list-group-item:last-child p', 'Un commentaire');
+        self::assertSelectorTextContains('div.list-group-item:last-child p', 'Mon commentaire');
         self::assertSelectorTextContains('div.list-group-item:last-child span.value', '4');
     }
-
-//    public function testShouldPostReview(): void
-//    {
-//        $this->login();
-//        $this->get('/jeu-video-49');
-//        self::assertResponseIsSuccessful();
-//        $this->submit(
-//            'Poster',
-//            [
-//                'review[rating]' => 4,
-//                'review[comment]' => 'Mon commentaire',
-//            ]
-//        );
-//        self::assertResponseStatusCodeSame(Response::HTTP_FOUND);
-//        $this->client->followRedirect();
-//        self::assertSelectorTextContains('div.list-group-item:last-child h3', 'user+0');
-//        self::assertSelectorTextContains('div.list-group-item:last-child p', 'Mon commentaire');
-//        self::assertSelectorTextContains('div.list-group-item:last-child span.value', '4');
-//    }
 }

@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Rating;
+namespace App\Tests\Unit;
 
+use App\Model\Entity\NumberOfRatingPerValue;
 use App\Model\Entity\Review;
 use App\Model\Entity\VideoGame;
 use App\Rating\RatingHandler;
-use PHPUnit\Framework\TestCase;
+use Monolog\Test\TestCase;
 
-class CalculateAverageRatingTest extends TestCase
+final class AverageRatingCalculatorTest extends TestCase
 {
-
     /**
      * @dataProvider provideVideoGame
      */
-    public function testCalculateAverage(VideoGame $videoGame, ?int $expectedAverageRating): void
+    public function testShouldCalculateAverageRating(VideoGame $videoGame, ?int $expectedAverageRating): void
     {
         $ratingHandler = new RatingHandler();
         $ratingHandler->calculateAverage($videoGame);
@@ -23,18 +23,18 @@ class CalculateAverageRatingTest extends TestCase
         self::assertSame($expectedAverageRating, $videoGame->getAverageRating());
     }
 
-
     /**
      * @return iterable<array{VideoGame, ?int}>
      */
     public static function provideVideoGame(): iterable
     {
-        yield 'No review' => [new VideoGame(), null];
+        yield 'No review' => [new VideoGame(), null,];
 
-        yield 'One review' => [self::createVideoGame(5), 5];
+        yield 'One review' => [self::createVideoGame(5), 5,];
 
         yield 'A lot of reviews' => [
-            self::createVideoGame(1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5), 4
+            self::createVideoGame(1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5),
+            4,
         ];
     }
 

@@ -9,6 +9,160 @@ use App\Tests\Functional\FunctionalTestCase;
 final class FilterTest extends FunctionalTestCase
 {
     /**
+     * @return iterable<string, array{
+     *     query: array<string, mixed>,
+     *     expectedCount: int,
+     *     expectedOffsetFrom: int,
+     *     expectedOffsetTo: int,
+     *     expectedTotal: int,
+     *     expectedPage: ?int,
+     *     expectedPaginationLinks: string[],
+     *     expectedVideoGames: string[]
+     * }>
+     */
+    public static function provideUseCases(): iterable
+    {
+        yield 'First page' => self::createUseCase();
+        yield 'Page #2' => self::createUseCase(
+            query: ['page' => 2],
+            expectedOffsetFrom: 11,
+            expectedOffsetTo: 20,
+            expectedPage: 2,
+            expectedPaginationLinks: ['1', '2', '3', '4', '5'],
+        );
+        yield 'Last page' => self::createUseCase(
+            query: ['page' => 5],
+            expectedOffsetFrom: 41,
+            expectedOffsetTo: 50,
+            expectedPage: 5,
+            expectedPaginationLinks: ['2', '3', '4', '5'],
+        );
+        yield 'First page, limit at 25' => self::createUseCase(
+            query: ['limit' => 25],
+            expectedCount: 25,
+            expectedOffsetTo: 25,
+            expectedPaginationLinks: ['1', '2'],
+        );
+        yield 'First page, limit at 50' => self::createUseCase(
+            query: ['limit' => 50],
+            expectedCount: 50,
+            expectedOffsetTo: 50,
+            expectedPage: null,
+        );
+        yield 'First page, sorting by title' => self::createUseCase(
+            query: ['sorting' => 'Title'],
+            expectedVideoGames: [
+                'Jeu vidéo 9',
+                'Jeu vidéo 8',
+                'Jeu vidéo 7',
+                'Jeu vidéo 6',
+                'Jeu vidéo 5',
+                'Jeu vidéo 49',
+                'Jeu vidéo 48',
+                'Jeu vidéo 47',
+                'Jeu vidéo 46',
+                'Jeu vidéo 45',
+            ]
+        );
+        yield 'First page, sorting by title, direction on ascending' => self::createUseCase(
+            query: ['sorting' => 'Title', 'direction' => 'Ascending'],
+            expectedVideoGames: [
+                'Jeu vidéo 0',
+                'Jeu vidéo 1',
+                'Jeu vidéo 10',
+                'Jeu vidéo 11',
+                'Jeu vidéo 12',
+                'Jeu vidéo 13',
+                'Jeu vidéo 14',
+                'Jeu vidéo 15',
+                'Jeu vidéo 16',
+                'Jeu vidéo 17',
+            ]
+        );
+        yield 'First page, filter by search' => self::createUseCase(
+            query: ['filter' => ['search' => 'Jeu vidéo 49']],
+            expectedCount: 1,
+            expectedOffsetTo: 1,
+            expectedTotal: 1,
+            expectedPage: null,
+            expectedVideoGames: ['Jeu vidéo 49']
+        );
+        yield 'First page, filter by 1 tag' => self::createUseCase(
+            query: ['filter' => ['tags' => ['1']]],
+            expectedTotal: 10,
+            expectedPage: null,
+            expectedVideoGames: [
+                'Jeu vidéo 0',
+                'Jeu vidéo 21',
+                'Jeu vidéo 22',
+                'Jeu vidéo 23',
+                'Jeu vidéo 24',
+                'Jeu vidéo 25',
+                'Jeu vidéo 46',
+                'Jeu vidéo 47',
+                'Jeu vidéo 48',
+                'Jeu vidéo 49',
+            ]
+        );
+        yield 'First page, filter by 2 tags' => self::createUseCase(
+            query: ['filter' => ['tags' => ['1', '2']]],
+            expectedCount: 8,
+            expectedOffsetTo: 8,
+            expectedTotal: 8,
+            expectedPage: null,
+            expectedVideoGames: [
+                'Jeu vidéo 0',
+                'Jeu vidéo 22',
+                'Jeu vidéo 23',
+                'Jeu vidéo 24',
+                'Jeu vidéo 25',
+                'Jeu vidéo 47',
+                'Jeu vidéo 48',
+                'Jeu vidéo 49',
+            ]
+        );
+        yield 'First page, filter by 3 tags' => self::createUseCase(
+            query: ['filter' => ['tags' => ['1', '2', '3']]],
+            expectedCount: 6,
+            expectedOffsetTo: 6,
+            expectedTotal: 6,
+            expectedPage: null,
+            expectedVideoGames: [
+                'Jeu vidéo 0',
+                'Jeu vidéo 23',
+                'Jeu vidéo 24',
+                'Jeu vidéo 25',
+                'Jeu vidéo 48',
+                'Jeu vidéo 49',
+            ]
+        );
+        yield 'First page, filter by 4 tags' => self::createUseCase(
+            query: ['filter' => ['tags' => ['1', '2', '3', '4']]],
+            expectedCount: 4,
+            expectedOffsetTo: 4,
+            expectedTotal: 4,
+            expectedPage: null,
+            expectedVideoGames: [
+                'Jeu vidéo 0',
+                'Jeu vidéo 24',
+                'Jeu vidéo 25',
+                'Jeu vidéo 49',
+            ]
+        );
+        yield 'First page, filter by 5 tags' => self::createUseCase(
+            query: ['filter' => ['tags' => ['1', '2', '3', '4', '5']]],
+            expectedCount: 2,
+            expectedOffsetTo: 2,
+            expectedTotal: 2,
+            expectedPage: null,
+            expectedVideoGames: [
+                'Jeu vidéo 0',
+                'Jeu vidéo 25',
+            ]
+        );
+    }
+
+    /**
      * @param array<string, mixed> $query
      * @param string[] $expectedPaginationLinks
      * @param string[] $expectedVideoGames
@@ -153,7 +307,7 @@ final class FilterTest extends FunctionalTestCase
      * @return array{
      *     query: array<string, mixed>,
      *     expectedCount: int,
-     *     expectedOffsetFrom: int,
+     *      expectedOffsetFrom: int,
      *     expectedOffsetTo: int,
      *     expectedTotal: int,
      *     expectedPage: int|null,
@@ -162,7 +316,7 @@ final class FilterTest extends FunctionalTestCase
      * }
      */
     private static function createUseCase(
-        array $query,
+        array $query = [],
         int $expectedCount = 10,
         int $expectedOffsetFrom = 1,
         int $expectedOffsetTo = 10,
@@ -170,10 +324,14 @@ final class FilterTest extends FunctionalTestCase
         ?int $expectedPage = 1,
         ?array $expectedPaginationLinks = null,
         ?array $expectedVideoGames = null
-    ): array
-    {
+    ): array {
         if ($expectedPage !== null) {
-            $expectedPaginationLinks = $expectedPaginationLinks ?? ['1', '2', '3', '4'];
+            $expectedPaginationLinks = $expectedPaginationLinks ?? [
+                '1',
+                '2',
+                '3',
+                '4',
+            ];
 
             if ($expectedPage > 1) {
                 $expectedPaginationLinks = array_merge(['Première page', 'Précédent'], $expectedPaginationLinks);
@@ -193,167 +351,13 @@ final class FilterTest extends FunctionalTestCase
             'expectedPage' => $expectedPage,
             'expectedPaginationLinks' => $expectedPaginationLinks ?? [],
             'expectedVideoGames' => $expectedVideoGames ?? array_fill_callback(
-            $expectedOffsetFrom - 1,
-                $expectedCount,
-                static fn (int $index) => sprintf(
-                    'Jeu vidéo %d',
-                    $index
+                    $expectedOffsetFrom - 1,
+                    $expectedCount,
+                    static fn (int $index) => sprintf(
+                        'Jeu vidéo %d',
+                        $index
+                    )
                 )
-            )
         ];
-    }
-
-    /**
-     * @return iterable<string, array{
-     *     query: array<string, mixed>,
-     *     expectedCount: int,
-     *     expectedOffsetFrom: int,
-     *     expectedOffsetTo: int,
-     *     expectedTotal: int,
-     *     expectedPage: ?int,
-     *     expectedPaginationLinks: string[],
-     *     expectedVideoGames: string[]
-     * }>
-     */
-    public static function provideUseCases(): iterable
-    {
-        yield 'First page' => self::createUseCase(['page' => 1]);
-        yield 'Page #2' => self::createUseCase(
-            query: ['page' => 2],
-            expectedOffsetFrom: 11,
-            expectedOffsetTo: 20,
-            expectedPage: 2,
-            expectedPaginationLinks: ['1', '2', '3', '4', '5'],
-        );
-        yield 'Last page' => self::createUseCase(
-            query: ['page' => 5],
-            expectedOffsetFrom: 41,
-            expectedOffsetTo: 50,
-            expectedPage: 5,
-            expectedPaginationLinks: ['2', '3', '4', '5'],
-        );
-        yield 'First page, limit at 25' => self::createUseCase(
-            query: ['limit' => 25],
-            expectedCount: 25,
-            expectedOffsetTo: 25,
-            expectedPaginationLinks: ['1', '2'],
-        );
-        yield 'First page, limit at 50' => self::createUseCase(
-            query: ['limit' => 50],
-            expectedCount: 50,
-            expectedOffsetTo: 50,
-            expectedPage: null,
-        );
-        yield 'First page, sorting by title' => self::createUseCase(
-            query: ['sorting' => 'Title'],
-            expectedVideoGames: [
-                'Jeu vidéo 9',
-                'Jeu vidéo 8',
-                'Jeu vidéo 7',
-                'Jeu vidéo 6',
-                'Jeu vidéo 5',
-                'Jeu vidéo 49',
-                'Jeu vidéo 48',
-                'Jeu vidéo 47',
-                'Jeu vidéo 46',
-                'Jeu vidéo 45',
-            ]
-        );
-        yield 'First page, sorting by title, direction on ascending' => self::createUseCase(
-            query: ['sorting' => 'Title', 'direction' => 'Ascending'],
-            expectedVideoGames: [
-                'Jeu vidéo 0',
-                'Jeu vidéo 1',
-                'Jeu vidéo 10',
-                'Jeu vidéo 11',
-                'Jeu vidéo 12',
-                'Jeu vidéo 13',
-                'Jeu vidéo 14',
-                'Jeu vidéo 15',
-                'Jeu vidéo 16',
-                'Jeu vidéo 17',
-            ]
-        );
-        yield 'First page, filter by search' => self::createUseCase(
-            query: ['filter' => ['search' => 'Jeu vidéo 49']],
-            expectedCount: 1,
-            expectedOffsetTo: 1,
-            expectedTotal: 1,
-            expectedPage: null,
-            expectedVideoGames: ['Jeu vidéo 49']
-        );
-        yield 'First page, filter by 1 tag' => self::createUseCase(
-            query: ['filter' => ['tags' => ['1']]],
-            expectedTotal: 10,
-            expectedPage: null,
-            expectedVideoGames: [
-                'Jeu vidéo 0',
-                'Jeu vidéo 21',
-                'Jeu vidéo 22',
-                'Jeu vidéo 23',
-                'Jeu vidéo 24',
-                'Jeu vidéo 25',
-                'Jeu vidéo 46',
-                'Jeu vidéo 47',
-                'Jeu vidéo 48',
-                'Jeu vidéo 49',
-            ]
-        );
-        yield 'First page, filter by 2 tags' => self::createUseCase(
-            query: ['filter' => ['tags' => ['1', '2']]],
-            expectedCount: 8,
-            expectedOffsetTo: 8,
-            expectedTotal: 8,
-            expectedPage: null,
-            expectedVideoGames: [
-                'Jeu vidéo 0',
-                'Jeu vidéo 22',
-                'Jeu vidéo 23',
-                'Jeu vidéo 24',
-                'Jeu vidéo 25',
-                'Jeu vidéo 47',
-                'Jeu vidéo 48',
-                'Jeu vidéo 49',
-            ]
-        );
-        yield 'First page, filter by 3 tags' => self::createUseCase(
-            query: ['filter' => ['tags' => ['1', '2', '3']]],
-            expectedCount: 6,
-            expectedOffsetTo: 6,
-            expectedTotal: 6,
-            expectedPage: null,
-            expectedVideoGames: [
-                'Jeu vidéo 0',
-                'Jeu vidéo 23',
-                'Jeu vidéo 24',
-                'Jeu vidéo 25',
-                'Jeu vidéo 48',
-                'Jeu vidéo 49',
-            ]
-        );
-        yield 'First page, filter by 4 tags' => self::createUseCase(
-            query: ['filter' => ['tags' => ['1', '2', '3', '4']]],
-            expectedCount: 4,
-            expectedOffsetTo: 4,
-            expectedTotal: 4,
-            expectedPage: null,
-            expectedVideoGames: [
-                'Jeu vidéo 0',
-                'Jeu vidéo 24',
-                'Jeu vidéo 25',
-                'Jeu vidéo 49',
-            ]
-        );
-        yield 'First page, filter by 5 tags' => self::createUseCase(
-            query: ['filter' => ['tags' => ['1', '2', '3', '4', '5']]],
-            expectedCount: 2,
-            expectedOffsetTo: 2,
-            expectedTotal: 2,
-            expectedPage: null,
-            expectedVideoGames: [
-                'Jeu vidéo 0',
-                'Jeu vidéo 25',
-            ]
-        );
     }
 }

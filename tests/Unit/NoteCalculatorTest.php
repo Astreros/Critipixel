@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Rating;
+namespace App\Tests\Unit;
 
 use App\Model\Entity\NumberOfRatingPerValue;
 use App\Model\Entity\Review;
 use App\Model\Entity\VideoGame;
 use App\Rating\RatingHandler;
-use PHPUnit\Framework\TestCase;
+use Monolog\Test\TestCase;
 
-class CountRatingsPerValueTest extends TestCase
+final class NoteCalculatorTest extends TestCase
 {
     /**
      * @dataProvider provideVideoGame
      */
-    public function testCountRatingsPerValue(VideoGame $videoGame, NumberOfRatingPerValue $expectedNumberOfRatingPerValue): void
+    public function testShouldCountRatingPerValue(VideoGame $videoGame, NumberOfRatingPerValue $expectedNumberOfRatingPerValue): void
     {
         $ratingHandler = new RatingHandler();
         $ratingHandler->countRatingsPerValue($videoGame);
