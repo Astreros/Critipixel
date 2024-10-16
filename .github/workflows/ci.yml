@@ -50,7 +50,7 @@ jobs:
 
       - name: Load fixtures
         run: | 
-          php bin/console doctrine:fixtures:load -n --purge-with-truncate --env=test
+          php bin/console doctrine:fixtures:load -n --env=test
 
       - name: Build SASS
         run: |
